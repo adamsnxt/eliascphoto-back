@@ -1,0 +1,1 @@
+ALTER TABLE reviews ALTER COLUMN is_active SET DEFAULT TRUE;
