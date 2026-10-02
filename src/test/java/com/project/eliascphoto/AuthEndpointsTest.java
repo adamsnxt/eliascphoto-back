@@ -1,5 +1,7 @@
 package com.project.eliascphoto;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,6 +19,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jayway.jsonpath.JsonPath;
+import com.project.eliascphoto.model.Review;
+import com.project.eliascphoto.repository.ReviewRepository;
 
 @SpringBootTest(properties = "app.security.registration.allowed-ip=203.0.113.10")
 @AutoConfigureMockMvc
@@ -25,6 +29,9 @@ class AuthEndpointsTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ReviewRepository reviewRepository;
 
     @Test
     void swaggerIsPublicAndUsersApiRequiresAnAccessToken() throws Exception {
@@ -91,10 +98,24 @@ class AuthEndpointsTest {
                 createResult.getResponse().getContentAsString(), "$.id");
         long reviewId = reviewIdValue.longValue();
 
-        mockMvc.perform(get("/api/reviews"))
-                .andExpect(status().isOk());
+        Review inactiveReview = new Review();
+        inactiveReview.setName("Hidden " + java.util.UUID.randomUUID());
+        inactiveReview.setText("No debe aparecer en GET");
+        inactiveReview.setRate(3.0f);
+        inactiveReview.setActive(false);
+        Review savedInactiveReview = reviewRepository.save(inactiveReview);
+
+        MvcResult reviewsResult = mockMvc.perform(get("/api/reviews"))
+                .andExpect(status().isOk())
+                .andReturn();
+        String reviewsJson = reviewsResult.getResponse().getContentAsString();
+        java.util.List<String> reviewNames = JsonPath.read(reviewsJson, "$[*].name");
+        assertTrue(reviewNames.contains("Elena"));
+        assertFalse(reviewNames.contains(savedInactiveReview.getName()));
         mockMvc.perform(get("/api/reviews/" + reviewId))
                 .andExpect(status().isOk());
+        mockMvc.perform(get("/api/reviews/" + savedInactiveReview.getId()))
+                .andExpect(status().isNotFound());
 
         String updateBody = "{\"name\":\"Elena Updated\",\"text\":\"Muy buena experiencia\",\"rate\":5.0}";
         mockMvc.perform(put("/api/reviews/" + reviewId)

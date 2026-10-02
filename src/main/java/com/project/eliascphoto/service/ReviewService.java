@@ -24,14 +24,18 @@ public class ReviewService {
 
     @Transactional(readOnly = true)
     public List<ReviewResponse> getReviews() {
-        return reviewRepository.findAllByOrderByIdDesc().stream()
+        return reviewRepository.findAllByIsActiveTrueOrderByIdDesc().stream()
                 .map(ReviewService::toResponse)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public ReviewResponse getReview(Long id) {
-        return toResponse(findReview(id));
+        Review review = findReview(id);
+        if (!review.isActive()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Reseña no encontrada");
+        }
+        return toResponse(review);
     }
 
     public ReviewResponse createReview(ReviewRequest request) {
