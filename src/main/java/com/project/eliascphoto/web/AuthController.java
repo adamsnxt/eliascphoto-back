@@ -12,6 +12,7 @@ import com.project.eliascphoto.service.RegistrationIpGuard;
 import com.project.eliascphoto.service.UserService;
 import com.project.eliascphoto.web.dto.CreateUserRequest;
 import com.project.eliascphoto.web.dto.LoginRequest;
+import com.project.eliascphoto.web.dto.RefreshTokenRequest;
 import com.project.eliascphoto.web.dto.UserResponse;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,5 +41,16 @@ public class AuthController {
     @PostMapping("/login")
     public JwtTokenPair login(@Valid @RequestBody LoginRequest request) {
         return userService.login(request.getUserName(), request.getPassword());
+    }
+
+    @PostMapping("/refresh")
+    public JwtTokenPair refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return userService.refresh(request.getRefreshToken());
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@Valid @RequestBody RefreshTokenRequest request) {
+        userService.logout(request.getRefreshToken());
+        return ResponseEntity.noContent().build();
     }
 }

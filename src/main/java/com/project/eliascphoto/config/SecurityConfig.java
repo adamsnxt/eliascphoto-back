@@ -29,6 +29,8 @@ public class SecurityConfig {
                 .requestMatchers(
                         "/api/auth/login",
                         "/api/auth/register",
+                        "/api/auth/refresh",
+                        "/api/auth/logout",
                         "/api/reviews",
                         "/api/reviews/**",
                         "/swagger-ui.html",
@@ -47,7 +49,10 @@ public class SecurityConfig {
         DefaultBearerTokenResolver delegate = new DefaultBearerTokenResolver();
         return request -> {
             String path = request.getRequestURI().substring(request.getContextPath().length());
-            if ("/api/auth/login".equals(path) || "/api/auth/register".equals(path)) {
+            if ("/api/auth/login".equals(path)
+                    || "/api/auth/register".equals(path)
+                    || "/api/auth/refresh".equals(path)
+                    || "/api/auth/logout".equals(path)) {
                 return null;
             }
             return delegate.resolve(request);

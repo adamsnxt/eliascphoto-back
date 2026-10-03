@@ -70,6 +70,38 @@ class AuthEndpointsTest {
         mockMvc.perform(get("/api/users").header("Authorization", "Bearer " + refreshToken))
                 .andExpect(status().isUnauthorized());
 
+        MvcResult refreshResult = mockMvc.perform(post("/api/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"refreshToken\":\"" + refreshToken + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.refreshToken").isNotEmpty())
+                .andReturn();
+        String refreshedAccessToken = JsonPath.read(
+                refreshResult.getResponse().getContentAsString(), "$.accessToken");
+        String refreshedRefreshToken = JsonPath.read(
+                refreshResult.getResponse().getContentAsString(), "$.refreshToken");
+        mockMvc.perform(get("/api/users").header("Authorization", "Bearer " + refreshedAccessToken))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"refreshToken\":\"" + refreshToken + "\"}"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"refreshToken\":\"" + accessToken + "\"}"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/auth/logout")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"refreshToken\":\"" + refreshedRefreshToken + "\"}"))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(post("/api/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"refreshToken\":\"" + refreshedRefreshToken + "\"}"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/users").header("Authorization", "Bearer " + refreshedAccessToken))
+                .andExpect(status().isOk());
+
         String blockedBody = "{\"userName\":\"blocked-" + userName + "\",\"password\":\"" + password + "\"}";
         mockMvc.perform(post("/api/auth/register")
                 .header("X-Forwarded-For", "198.51.100.20, 198.51.100.20")
