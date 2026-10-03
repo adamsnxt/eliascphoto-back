@@ -3,6 +3,8 @@ package com.project.eliascphoto.service;
 import java.time.Instant;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -21,6 +23,8 @@ import com.project.eliascphoto.web.dto.UserResponse;
 @Service
 @Transactional
 public class UserService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
     private final RefreshTokenSessionRepository refreshTokenSessionRepository;
@@ -45,17 +49,24 @@ public class UserService {
                 .toList();
     }
 
-    public UserResponse registerUser(CreateUserRequest request) {
+    public UserResponse registerUser(CreateUserRequest request, String registrationId) {
         String userName = request.getUserName().trim();
+        LOGGER.info("Registration id={} stage=user_check_started", registrationId);
         if (userRepository.existsByUserName(userName)) {
+            LOGGER.warn("Registration id={} stage=user_check result=duplicate", registrationId);
             throw new ResponseStatusException(HttpStatus.CONFLICT, "El nombre de usuario ya existe");
         }
+        LOGGER.info("Registration id={} stage=user_check result=available", registrationId);
 
         User user = new User();
         user.setUserName(userName);
+        LOGGER.info("Registration id={} stage=password_encoding_started", registrationId);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        LOGGER.info("Registration id={} stage=password_encoding_completed", registrationId);
 
+        LOGGER.info("Registration id={} stage=user_save_started", registrationId);
         User savedUser = userRepository.save(user);
+        LOGGER.info("Registration id={} stage=user_saved", registrationId);
         return new UserResponse(savedUser.getUserName());
     }
 
