@@ -8,5 +8,5 @@ import com.project.eliascphoto.model.Review;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
-    List<Review> findAllByIsActiveTrueOrderByIdDesc();
+    List<Review> findAllByOrderByIdDesc();
 }

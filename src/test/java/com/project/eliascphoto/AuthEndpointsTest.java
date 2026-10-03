@@ -1,6 +1,5 @@
 package com.project.eliascphoto;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -132,7 +131,7 @@ class AuthEndpointsTest {
 
         Review inactiveReview = new Review();
         inactiveReview.setName("Hidden " + java.util.UUID.randomUUID());
-        inactiveReview.setText("No debe aparecer en GET");
+        inactiveReview.setText("Debe aparecer en la API para que el frontend filtre el estado");
         inactiveReview.setRate(3.0f);
         inactiveReview.setActive(false);
         Review savedInactiveReview = reviewRepository.save(inactiveReview);
@@ -143,16 +142,23 @@ class AuthEndpointsTest {
         String reviewsJson = reviewsResult.getResponse().getContentAsString();
         java.util.List<String> reviewNames = JsonPath.read(reviewsJson, "$[*].name");
         assertTrue(reviewNames.contains("Elena"));
-        assertFalse(reviewNames.contains(savedInactiveReview.getName()));
+        assertTrue(reviewNames.contains(savedInactiveReview.getName()));
         mockMvc.perform(get("/api/reviews/" + reviewId))
                 .andExpect(status().isOk());
         mockMvc.perform(get("/api/reviews/" + savedInactiveReview.getId()))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isActive").value(false));
 
-        String updateBody = "{\"name\":\"Elena Updated\",\"text\":\"Muy buena experiencia\",\"rate\":5.0}";
+        String updateBody = "{\"name\":\"Elena Updated\",\"text\":\"Muy buena experiencia\",\"rate\":5.0,\"isActive\":false}";
         mockMvc.perform(put("/api/reviews/" + reviewId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(updateBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isActive").value(false));
+
+        mockMvc.perform(put("/api/reviews/" + reviewId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Elena Updated\",\"text\":\"Muy buena experiencia\",\"rate\":5.0,\"isActive\":true}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.isActive").value(true));
 

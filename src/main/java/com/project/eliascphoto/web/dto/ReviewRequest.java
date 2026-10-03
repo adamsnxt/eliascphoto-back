@@ -14,6 +14,7 @@ public record ReviewRequest(
         String text,
         @DecimalMin("1.0")
         @DecimalMax("5.0")
-        float rate) {
+        float rate,
+        Boolean isActive) {
 
 }
