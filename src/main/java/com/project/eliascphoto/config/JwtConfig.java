@@ -18,7 +18,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 
 @Configuration
-@EnableConfigurationProperties(JwtProperties.class)
+@EnableConfigurationProperties({JwtProperties.class, AppointmentProperties.class})
 public class JwtConfig {
 
     @Bean

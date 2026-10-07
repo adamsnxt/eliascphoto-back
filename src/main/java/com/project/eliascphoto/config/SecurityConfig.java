@@ -3,6 +3,7 @@ package com.project.eliascphoto.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -31,12 +32,13 @@ public class SecurityConfig {
                         "/api/auth/register",
                         "/api/auth/refresh",
                         "/api/auth/logout",
-                        "/api/reviews",
-                        "/api/reviews/**",
                         "/swagger-ui.html",
                         "/swagger-ui/**",
                         "/v3/api-docs/**")
                 .permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/consultation-types").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/appointments").permitAll()
+                .requestMatchers("/api/reviews", "/api/reviews/**").permitAll()
                 .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                 .bearerTokenResolver(bearerTokenResolver)
